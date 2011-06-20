@@ -14,11 +14,13 @@
 Usage example:
 
 [code]
-    from PythonGG import *
+    import unigglib
 
-    mygg = GG(33333333, 'password')
+    mygg = unigglib.GG(33333333, 'password')
     mygg.connect()
     mygg.login()
+    mygg.status(unigglib.Available)
+    mygg.msg(1234567, 'test')
     mygg.disconnect()
 [/code]
 
@@ -27,7 +29,7 @@ Usage example:
 import httplib 
 import string   # i.e. split()
 from socket import *
-import struct
+# import struct
 from Queue import *
 from login import *
 from status import *
@@ -43,12 +45,18 @@ __date__ ="$2011-06-13 22:21:27$"
 
 """
     * to-do: *
-        zsynchronizowac watki z metodami klasy GG
-        zeby nadazalo sprawdzac np. potwierdzenie
-        wyslania wiadomosci
-        
-        ...no i jakis kanal komunikacji z watkami
-           jak by dalo rade.
+        a) drobne poprawki
+        b) informacje o kontaktach
+        c) import/eksport listy
+        d) katalog (OAuth ?)
+        e) pliki
+        f) wiadomosci z obrazkami + ew. formatowanie
+        g) watchdog (ping + sprawdzanie polaczenia z serwerem)
+        h) zrobic cos do cholery z tymi wyjatkami asynchronicznego rozlaczenia w Listener::run() ;x
+            przyklad:
+            '[+] Disconnected successfully!
+             [!] Error: Unmapped exception: java.nio.channels.AsynchronousCloseException (-1)
+             [E] Exception caught in Listener::run()'
 """
 
 class GG:
@@ -62,6 +70,7 @@ class GG:
     listener = watchdog = 0
     locked = True
     messages = Queue()
+    contactList = []     # tutaj umieszczac gotowa liste (stworzyc modul contacts.py i tam dodac klase kontaktu)
     
     def getServerInfo(self):
         conn = httplib.HTTPConnection("appmsg.gadu-gadu.pl")

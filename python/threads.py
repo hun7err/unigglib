@@ -90,8 +90,10 @@ class Listener (Thread):
                         # print "[L] From: "+str(msg[2])
                         # print "[L] Text: "+str(msg[10])
                         # print "[L] Time: "+time.ctime(msg[4])
-      # !!!          elif (info[0] == GG_SEND_MSG_ACK):    # to-do:
-                        #self.gg_inst.locked = False       # a) dodac komunikacje z glownym watkiem poprzez Queue (patrz: docs.python.org)
+                    elif (info[0] == GG_SEND_MSG_ACK):    
+                        msg = struct.unpack('<III', packet)
+                        self.gg_inst.messages.put(msg[0])
+                        self.gg_inst.locked = False       
                         
                         
     def __init__ (self, _gg_inst):
@@ -103,27 +105,14 @@ class Listener (Thread):
         self.gg_inst.locked = False
                         
                 
-class WatchDog (Thread):
+class WatchDog (Thread):     # to-do: sprawdzanie czy serwer odpowiada, jak nie to reconnect
     _socket = 0
     connected = False
     gg_inst = 0
-    def check(self):
-        dane = struct.pack('<I', GG_PING)
-        self._socket.send(dane)
-        czas = int(time())
-        ponged = False
-        while ( int(time())-czas < 10 ):
-            dane = self._socket.recv(8)
-            if (len(dane) == 4):
-                packet = struct.unpack('<I', dane)
-                if (packet == GG_PONG):
-                    ponged = True
-                    break
-        if (ponged != True):
-            self.connected = False
-            self.gg_inst.disconnect()
-            self.gg_inst.connect()
-            self.gg_inst.login()
+    def ping(self):
+        pkt = EmptyPacket(GG_PING)
+        data = pkt.pack()
+        self._socket.send(data)
     def __init__ (self, _gg_inst):
         Thread.__init__(self)
         self._socket = _gg_inst.s
@@ -131,7 +120,7 @@ class WatchDog (Thread):
     def run (self):
         while 1:
             if (self.connected):
-                t = threading.Timer(4*3600, check)
+                t = threading.Timer(4*3600, ping)  # ping every 4 minutes
                 t.start()
             else:
                 t.cancel()
